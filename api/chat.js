@@ -13,19 +13,18 @@ export default async function handler(req, res) {
     if (req.method === 'POST') {
       const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
 
-      // 1. GLOBAL BAN CHECK
+      // BAN CHECK
       if (bannedUsers.includes(body.user.toLowerCase())) {
         return res.status(403).json({ error: "BANNED" });
       }
 
-      // 2. ADMIN COMMANDS HANDLING
+      // COMMANDS (?ban, ?unban, ?clear)
       if (body.text.startsWith('?')) {
         const args = body.text.split(' ');
         const cmd = args[0].toLowerCase();
         const target = args[1]?.toLowerCase();
 
-        // Only Sam or Admins can use ? commands
-        if (body.user.toLowerCase() === 'sam' || body.isAdmin) {
+        if (body.isAdmin || body.user.toLowerCase() === 'sam') {
           if (cmd === '?ban' && target) {
             if (!bannedUsers.includes(target)) bannedUsers.push(target);
           }
@@ -35,15 +34,8 @@ export default async function handler(req, res) {
           if (cmd === '?clear') {
             msgList = msgList.filter(m => m.room !== body.room);
           }
-          // Custom Command: ?nuke (Deletes EVERYTHING)
-          if (cmd === '?nuke' && body.user.toLowerCase() === 'sam') {
-            msgList = [];
-          }
         }
-      }
-
-      // 3. REGULAR MESSAGE LOGIC
-      if (!body.text.startsWith('?')) {
+      } else {
         msgList.push({
             user: body.user,
             text: body.text,
@@ -54,16 +46,9 @@ export default async function handler(req, res) {
         });
       }
 
-      await fetch(URL, { 
-        method: 'PUT', 
-        headers, 
-        body: JSON.stringify({ messages: msgList, banned: bannedUsers }) 
-      });
+      await fetch(URL, { method: 'PUT', headers, body: JSON.stringify({ messages: msgList, banned: bannedUsers }) });
       return res.status(200).json({ success: true });
     }
-
     return res.status(200).json({ messages: msgList, banned: bannedUsers });
-  } catch (error) {
-    return res.status(500).json({ error: error.message });
-  }
+  } catch (error) { return res.status(500).json({ error: error.message }); }
 }
