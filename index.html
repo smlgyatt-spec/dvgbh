@@ -1,69 +1,165 @@
-export default async function handler(req, res) {
-  const BIN_ID = "69bf3194aa77b81da907b7a4"; 
-  const API_KEY = "$2a$10$0Rjs4kz2ItckdcS2D19W2eGLaGA1xjDzpH/fkVcoag18A9VbMs7Uy"; 
-  const URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
-  const headers = { "X-Master-Key": API_KEY, "Content-Type": "application/json" };
-
-  try {
-    const response = await fetch(`${URL}/latest`, { headers });
-    const data = await response.json();
-    let msgList = data.record.messages || [];
-    let bannedUsers = data.record.banned || [];
-
-    if (req.method === 'POST') {
-      const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-
-      // 1. GLOBAL BAN CHECK
-      if (bannedUsers.includes(body.user.toLowerCase())) {
-        return res.status(403).json({ error: "BANNED" });
-      }
-
-      // 2. ADMIN COMMANDS HANDLING
-      if (body.text.startsWith('?')) {
-        const args = body.text.split(' ');
-        const cmd = args[0].toLowerCase();
-        const target = args[1]?.toLowerCase();
-
-        // Only Sam or Admins can use ? commands
-        if (body.user.toLowerCase() === 'sam' || body.isAdmin) {
-          if (cmd === '?ban' && target) {
-            if (!bannedUsers.includes(target)) bannedUsers.push(target);
-          }
-          if (cmd === '?unban' && target && body.user.toLowerCase() === 'sam') {
-            bannedUsers = bannedUsers.filter(u => u !== target);
-          }
-          if (cmd === '?clear') {
-            msgList = msgList.filter(m => m.room !== body.room);
-          }
-          // Custom Command: ?nuke (Deletes EVERYTHING)
-          if (cmd === '?nuke' && body.user.toLowerCase() === 'sam') {
-            msgList = [];
-          }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>dcord | Administrator Edition</title>
+    <style>
+        :root {
+            --bg-dark: #313338; --bg-side: #2b2d31; --bg-servers: #1e1f22;
+            --text-main: #dbdee1; --accent: #5865f2; --nitro-pink: #ff73fa;
+            --admin-gold: #f1c40f;
         }
-      }
+        body, html { margin: 0; padding: 0; font-family: sans-serif; height: 100%; background: var(--bg-dark); color: var(--text-main); overflow: hidden; }
+        .app { display: flex; height: 100vh; }
+        
+        /* Sidebar */
+        .servers { width: 72px; background: var(--bg-servers); display: flex; flex-direction: column; align-items: center; padding: 12px 0; gap: 8px; }
+        .server-btn { width: 48px; height: 48px; background: var(--bg-dark); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; font-weight: bold; }
+        .server-btn.active, .server-btn:hover { border-radius: 30%; background: var(--accent); }
+        
+        .channels { width: 240px; background: var(--bg-side); display: flex; flex-direction: column; }
+        .header { height: 48px; padding: 0 16px; display: flex; align-items: center; justify-content: space-between; font-weight: bold; border-bottom: 1px solid rgba(0,0,0,0.2); }
+        .link { padding: 8px 12px; margin: 2px 8px; border-radius: 4px; cursor: pointer; color: #949ba4; display: flex; justify-content: space-between; }
+        .link.active { background: #35373c; color: white; }
+        
+        /* Chat */
+        .messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .msg { display: flex; gap: 12px; padding: 5px; border-radius: 5px; }
+        .avatar { width: 40px; height: 40px; background: #5865f2; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        .nitro-glow { border: 2px solid var(--nitro-pink); box-shadow: 0 0 10px var(--nitro-pink); }
+        
+        /* Badges */
+        .badge { font-size: 9px; padding: 2px 5px; border-radius: 3px; margin-left: 5px; font-weight: bold; color: white; }
+        .bg-nitro { background: var(--nitro-pink); }
+        .bg-admin { background: var(--admin-gold); color: black; }
 
-      // 3. REGULAR MESSAGE LOGIC
-      if (!body.text.startsWith('?')) {
-        msgList.push({
-            user: body.user,
-            text: body.text,
-            room: body.room || "global",
-            nitro: body.nitro || false,
-            role: body.role || "User",
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        });
-      }
+        input { width: 100%; background: #383a40; border: none; color: white; padding: 12px; border-radius: 8px; outline: none; }
+        .banned-screen { position: fixed; inset: 0; background: black; color: red; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; }
+    </style>
+</head>
+<body>
 
-      await fetch(URL, { 
-        method: 'PUT', 
-        headers, 
-        body: JSON.stringify({ messages: msgList, banned: bannedUsers }) 
-      });
-      return res.status(200).json({ success: true });
+<div id="banned-overlay" class="banned-screen" style="display: none;">
+    <h1>YOU ARE BANNED</h1>
+    <p>Contact Sam to be unbanned.</p>
+</div>
+
+<div class="app">
+    <div class="servers">
+        <div class="server-btn active" onclick="location.reload()">D</div>
+        <div class="server-btn" onclick="addServer()" style="color:#23a55a">+</div>
+    </div>
+
+    <div class="channels">
+        <div class="header">
+            <span>Channels</span>
+            <span id="add-chan-btn" style="cursor:pointer" onclick="addChannel()">+</span>
+        </div>
+        <div id="channel-list"></div>
+        
+        <div style="margin-top:auto; padding:10px; background:#232428;">
+            <div id="my-name-display" style="font-weight:bold;">User</div>
+            <div id="my-role-display" style="font-size:10px; color:#949ba4;">Member</div>
+            <div style="color:red; font-size:10px; cursor:pointer;" onclick="localStorage.clear(); location.reload();">Logout</div>
+        </div>
+    </div>
+
+    <div class="main" style="flex:1; display:flex; flex-direction:column;">
+        <div class="header"><span id="room-title"># global</span></div>
+        <div class="messages" id="flow"></div>
+        <div style="padding:20px;">
+            <input type="text" id="chat-in" placeholder="Message..." onkeypress="handle(event)">
+        </div>
+    </div>
+</div>
+
+<script>
+    let myName = localStorage.getItem('dc-user') || prompt("Username:");
+    localStorage.setItem('dc-user', myName);
+    
+    let isSam = myName.toLowerCase() === 'sam';
+    let isAdmin = localStorage.getItem('dc-isadmin') === 'true' || isSam;
+    let currentRoom = "global";
+    let channels = JSON.parse(localStorage.getItem('dc-chans')) || ["global", "announcements"];
+
+    function addChannel() {
+        if (!isAdmin) return alert("Only Admins can create channels!");
+        const name = prompt("Channel Name:");
+        if (name) {
+            channels.push(name.toLowerCase());
+            localStorage.setItem('dc-chans', JSON.stringify(channels));
+            renderSidebar();
+        }
     }
 
-    return res.status(200).json({ messages: msgList, banned: bannedUsers });
-  } catch (error) {
-    return res.status(500).json({ error: error.message });
-  }
-}
+    async function handle(e) {
+        if (e.key === 'Enter' && e.target.value.trim()) {
+            const text = e.target.value;
+            e.target.value = "";
+            
+            // Handle ?admin command (Secret way to give admin)
+            if (text === "?admin " + myName && isSam) {
+                 isAdmin = true;
+                 localStorage.setItem('dc-isadmin', 'true');
+                 return alert("ADMIN POWER ACTIVATED");
+            }
+
+            const res = await fetch('/api/chat', {
+                method: 'POST',
+                body: JSON.stringify({
+                    user: myName,
+                    text: text,
+                    room: currentRoom,
+                    nitro: isSam,
+                    isAdmin: isAdmin,
+                    role: isSam ? "Owner" : (isAdmin ? "Admin" : "Member")
+                })
+            });
+
+            if (res.status === 403) document.getElementById('banned-overlay').style.display = 'flex';
+            sync();
+        }
+    }
+
+    async function sync() {
+        const res = await fetch('/api/chat');
+        const data = await res.json();
+        
+        if (data.banned.includes(myName.toLowerCase())) {
+            document.getElementById('banned-overlay').style.display = 'flex';
+        }
+
+        const filtered = data.messages.filter(m => m.room === currentRoom);
+        document.getElementById('flow').innerHTML = filtered.map(m => `
+            <div class="msg">
+                <div class="avatar ${m.nitro ? 'nitro-glow' : ''}">${m.user[0]}</div>
+                <div>
+                    <div>
+                        <span style="font-weight:bold; ${m.nitro ? 'color:var(--nitro-pink)' : ''}">${m.user}</span>
+                        ${m.nitro ? '<span class="badge bg-nitro">NITRO</span>' : ''}
+                        ${m.role === 'Admin' || m.role === 'Owner' ? '<span class="badge bg-admin">ADMIN</span>' : ''}
+                    </div>
+                    <div style="color:#dbdee1; margin-top:2px;">${m.text}</div>
+                </div>
+            </div>
+        `).join('');
+        const flow = document.getElementById('flow');
+        flow.scrollTop = flow.scrollHeight;
+    }
+
+    function renderSidebar() {
+        document.getElementById('channel-list').innerHTML = channels.map(c => `
+            <div class="link ${currentRoom === c ? 'active' : ''}" onclick="currentRoom='${c}'; renderSidebar(); sync();">
+                # ${c}
+            </div>
+        `).join('');
+        document.getElementById('my-name-display').innerText = myName;
+        document.getElementById('my-role-display').innerText = isSam ? "Owner" : (isAdmin ? "Admin" : "Member");
+        if (!isAdmin) document.getElementById('add-chan-btn').style.display = 'none';
+    }
+
+    renderSidebar();
+    setInterval(sync, 3000);
+</script>
+</body>
+</html>
