@@ -1,146 +1,69 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>dcord | Sam Edition</title>
-    <style>
-        :root {
-            --bg-dark: #313338; --bg-side: #2b2d31; --bg-servers: #1e1f22;
-            --text-main: #dbdee1; --accent: #5865f2; --nitro-pink: #ff73fa;
+export default async function handler(req, res) {
+  const BIN_ID = "69bf3194aa77b81da907b7a4"; 
+  const API_KEY = "$2a$10$0Rjs4kz2ItckdcS2D19W2eGLaGA1xjDzpH/fkVcoag18A9VbMs7Uy"; 
+  const URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+  const headers = { "X-Master-Key": API_KEY, "Content-Type": "application/json" };
+
+  try {
+    const response = await fetch(`${URL}/latest`, { headers });
+    const data = await response.json();
+    let msgList = data.record.messages || [];
+    let bannedUsers = data.record.banned || [];
+
+    if (req.method === 'POST') {
+      const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+
+      // 1. GLOBAL BAN CHECK
+      if (bannedUsers.includes(body.user.toLowerCase())) {
+        return res.status(403).json({ error: "BANNED" });
+      }
+
+      // 2. ADMIN COMMANDS HANDLING
+      if (body.text.startsWith('?')) {
+        const args = body.text.split(' ');
+        const cmd = args[0].toLowerCase();
+        const target = args[1]?.toLowerCase();
+
+        // Only Sam or Admins can use ? commands
+        if (body.user.toLowerCase() === 'sam' || body.isAdmin) {
+          if (cmd === '?ban' && target) {
+            if (!bannedUsers.includes(target)) bannedUsers.push(target);
+          }
+          if (cmd === '?unban' && target && body.user.toLowerCase() === 'sam') {
+            bannedUsers = bannedUsers.filter(u => u !== target);
+          }
+          if (cmd === '?clear') {
+            msgList = msgList.filter(m => m.room !== body.room);
+          }
+          // Custom Command: ?nuke (Deletes EVERYTHING)
+          if (cmd === '?nuke' && body.user.toLowerCase() === 'sam') {
+            msgList = [];
+          }
         }
-        body, html { margin: 0; padding: 0; font-family: sans-serif; height: 100%; background: var(--bg-dark); color: var(--text-main); overflow: hidden; }
-        .app { display: flex; height: 100vh; }
-        .servers { width: 72px; background: var(--bg-servers); display: flex; flex-direction: column; align-items: center; padding: 12px 0; gap: 8px; }
-        .logo { width: 48px; height: 48px; background: linear-gradient(45deg, #5865f2, #ff73fa); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; color: white; }
-        .channels { width: 240px; background: var(--bg-side); display: flex; flex-direction: column; }
-        .header { height: 48px; padding: 0 16px; display: flex; align-items: center; font-weight: bold; border-bottom: 1px solid rgba(0,0,0,0.2); justify-content: space-between; }
-        .link { padding: 8px 12px; margin: 2px 8px; border-radius: 4px; cursor: pointer; color: #949ba4; }
-        .link.active { background: #35373c; color: white; }
-        .main { flex: 1; display: flex; flex-direction: column; }
-        .messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
-        .msg { display: flex; gap: 12px; }
-        .avatar { width: 35px; height: 35px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; }
-        .input-area { padding: 20px; }
-        .input-box { background: #383a40; padding: 12px; border-radius: 8px; }
-        input { width: 100%; background: transparent; border: none; color: white; outline: none; }
-        .add-btn { margin: 10px; padding: 8px; background: #23a55a; color: white; border: none; border-radius: 4px; cursor: pointer; }
-    </style>
-</head>
-<body>
+      }
 
-<div class="app">
-    <div class="servers">
-        <div class="logo">D</div>
-    </div>
-    <div class="channels">
-        <div class="header">Direct Messages</div>
-        <div id="room-list">
-            <div class="link active" onclick="setRoom('global')"># global-chat</div>
-        </div>
-        <button class="add-btn" onclick="addNewFriend()">+ Add Friend</button>
-    </div>
-    <div class="main">
-        <div class="header">
-            <span id="room-title"># global-chat</span>
-            <button onclick="clearChat()" style="background:red; color:white; border:none; padding:4px; border-radius:4px; font-size:10px; cursor:pointer;">CLEAR</button>
-        </div>
-        <div class="messages" id="flow"></div>
-        <div class="input-area">
-            <div class="input-box"><input type="text" id="msg-in" placeholder="Message..." onkeypress="handle(event)"></div>
-        </div>
-    </div>
-</div>
-
-<script>
-    // 1. CHANGE: Check if a name is saved, otherwise ask for one
-    let myName = localStorage.getItem('dc-username');
-    
-    if (!myName) {
-        myName = prompt("Enter your username:");
-        if (!myName) myName = "Guest" + Math.floor(Math.random() * 1000);
-        localStorage.setItem('dc-username', myName);
-    }
-
-    let currentRoom = "global"; 
-    let allMsgs = [];
-    let friends = JSON.parse(localStorage.getItem('my-friends')) || [];
-
-    // 2. The rest of your logic stays the same but uses the dynamic 'myName'
-    function setRoom(room) {
-        currentRoom = room;
-        const displayName = room === 'global' ? '# global-chat' : '@ ' + room.replace(myName, '').replace('-', '');
-        document.getElementById('room-title').innerText = displayName;
-        renderRooms();
-        renderMessages();
-    }
-
-    function addNewFriend() {
-        const friendName = prompt("Friend's Name:");
-        if (friendName) {
-            // This creates a room name like "Sam-Cold" regardless of who adds who
-            const roomName = [myName, friendName].sort().join('-'); 
-            if (!friends.includes(roomName)) {
-                friends.push(roomName);
-                localStorage.setItem('my-friends', JSON.stringify(friends));
-            }
-            setRoom(roomName);
-        }
-    }
-
-    async function sync() {
-        try {
-            const res = await fetch('/api/chat');
-            const data = await res.json();
-            allMsgs = data.messages || [];
-            renderMessages();
-        } catch(e) { console.log("Connecting..."); }
-    }
-
-    async function send(text) {
-        await fetch('/api/chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                user: myName, 
-                text: text, 
-                room: currentRoom,
-                tag: myName.toLowerCase() === 'sam' ? "OWNER" : "USER" 
-            })
+      // 3. REGULAR MESSAGE LOGIC
+      if (!body.text.startsWith('?')) {
+        msgList.push({
+            user: body.user,
+            text: body.text,
+            room: body.room || "global",
+            nitro: body.nitro || false,
+            role: body.role || "User",
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         });
-        sync();
+      }
+
+      await fetch(URL, { 
+        method: 'PUT', 
+        headers, 
+        body: JSON.stringify({ messages: msgList, banned: bannedUsers }) 
+      });
+      return res.status(200).json({ success: true });
     }
 
-    function renderMessages() {
-        const flow = document.getElementById('flow');
-        const filtered = allMsgs.filter(m => m.room === currentRoom);
-        
-        flow.innerHTML = filtered.map(m => `
-            <div class="msg">
-                <div class="avatar">${m.user ? m.user[0].toUpperCase() : '?'}</div>
-                <div>
-                    <div style="font-weight:bold; font-size:13px;">
-                        ${m.user} ${m.user.toLowerCase() === 'sam' ? '<span style="color:var(--nitro-pink); font-size:10px;">[OWNER]</span>' : ''}
-                    </div>
-                    <div style="color:#dbdee1;">${m.text}</div>
-                </div>
-            </div>
-        `).join('');
-        flow.scrollTop = flow.scrollHeight;
-    }
-
-    function renderRooms() {
-        const list = document.getElementById('room-list');
-        list.innerHTML = `<div class="link ${currentRoom === 'global' ? 'active' : ''}" onclick="setRoom('global')"># global-chat</div>`;
-        friends.forEach(f => {
-            const cleanName = f.replace(myName, '').replace('-', '');
-            list.innerHTML += `<div class="link ${currentRoom === f ? 'active' : ''}" onclick="setRoom('${f}')">@ ${cleanName}</div>`;
-        });
-    }
-
-    function handle(e) { if(e.key === 'Enter' && e.target.value.trim()){ send(e.target.value); e.target.value = ""; } }
-    
-    renderRooms();
-    setInterval(sync, 3000);
-</script>
-</body>
-</html>
+    return res.status(200).json({ messages: msgList, banned: bannedUsers });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+}
