@@ -14,74 +14,78 @@
         .app-container { display: flex; height: 100vh; width: 100vw; }
         .hidden { display: none !important; }
 
-        /* Left Server Sidebar */
+        /* Login Overlay */
+        #login-overlay { position: fixed; inset: 0; background: #1e1f22; z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .login-box { background: #313338; padding: 32px; border-radius: 8px; width: 400px; box-shadow: 0 8px 16px rgba(0,0,0,0.2); }
+        .login-box h2 { text-align: center; margin-bottom: 8px; color: white; }
+        .login-box p { text-align: center; color: #b5bac1; font-size: 14px; margin-bottom: 20px; }
+        input[type="text"] { width: 100%; padding: 12px; background: #1e1f22; border: 1px solid #1e1f22; border-radius: 4px; color: white; outline: none; margin-bottom: 15px; box-sizing: border-box; }
+        .login-btn { width: 100%; padding: 12px; background: var(--accent); color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .login-btn:hover { background: #4752c4; }
+        #error-msg { color: #f23f43; font-size: 12px; margin-bottom: 10px; text-align: center; display: none; }
+
+        /* Sidebar & Navigation */
         .server-list { width: 72px; background: var(--bg-servers); display: flex; flex-direction: column; align-items: center; padding: 12px 0; gap: 8px; flex-shrink: 0; }
-        .server-icon { width: 48px; height: 48px; background: var(--bg-dark); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; font-weight: bold; color: white; border: none; }
+        .server-icon { width: 48px; height: 48px; background: var(--bg-dark); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; font-weight: bold; color: white; }
         .server-icon:hover, .server-icon.active { border-radius: 30%; background: var(--accent); }
-        .global-icon { background: linear-gradient(45deg, var(--nitro-purple), var(--nitro-pink)); box-shadow: 0 0 10px rgba(255, 115, 250, 0.2); }
+        .global-icon { background: linear-gradient(45deg, var(--nitro-purple), var(--nitro-pink)); }
 
-        /* Channel Panel */
         .sidebar-panel { width: 240px; background: var(--bg-side); display: flex; flex-direction: column; }
-        .panel-header { height: 48px; padding: 0 16px; display: flex; align-items: center; font-weight: bold; border-bottom: 1px solid rgba(0,0,0,0.2); font-size: 15px; justify-content: space-between; }
+        .panel-header { height: 48px; padding: 0 16px; display: flex; align-items: center; font-weight: bold; border-bottom: 1px solid rgba(0,0,0,0.2); font-size: 15px; }
         
-        .list-item { padding: 8px 12px; margin: 2px 8px; border-radius: 4px; color: #949ba4; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 14px; }
-        .list-item.active { background: #35373c; color: #fff; }
-
         /* User Bar */
-        .user-bar { padding: 8px; background: var(--profile-bg); display: flex; align-items: center; gap: 10px; border-top: 1px solid rgba(0,0,0,0.2); margin-top: auto; cursor: pointer; }
-        .avatar { width: 32px; height: 32px; background: var(--accent); border-radius: 50%; background-size: cover; }
-        .tag-badge { background: rgba(0,0,0,0.5); color: var(--nitro-pink); padding: 1px 5px; border-radius: 4px; font-size: 10px; font-weight: 900; text-transform: uppercase; }
+        .user-bar { padding: 8px; background: var(--profile-bg); display: flex; align-items: center; gap: 10px; border-top: 1px solid rgba(0,0,0,0.2); margin-top: auto; }
+        .avatar { width: 32px; height: 32px; background: var(--accent); border-radius: 50%; }
+        .tag-badge { background: rgba(0,0,0,0.5); color: var(--nitro-pink); padding: 1px 5px; border-radius: 4px; font-size: 10px; font-weight: 900; }
 
-        /* Main Chat Area */
+        /* Chat */
         .chat-area { flex: 1; display: flex; flex-direction: column; background: var(--bg-dark); }
         .messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 18px; }
         .msg-row { display: flex; gap: 16px; animation: msgFade 0.2s ease; }
-        .msg-content { flex: 1; }
         .msg-author { font-weight: bold; color: white; font-size: 14px; margin-bottom: 2px; display: flex; align-items: center; gap: 8px; }
-        .msg-text { color: var(--text-main); font-size: 15px; line-height: 1.4; white-space: pre-wrap; word-break: break-word; }
+        .msg-text { color: var(--text-main); font-size: 15px; }
 
         .input-wrap { padding: 0 20px 24px; }
-        .input-box { background: #383a40; border-radius: 8px; padding: 12px 16px; display: flex; align-items: center; }
-        .input-box input { width: 100%; background: transparent; border: none; color: white; outline: none; font-size: 15px; }
-        
-        .sync-indicator { font-size: 10px; color: #23a55a; font-weight: bold; letter-spacing: 0.5px; }
+        .input-box { background: #383a40; border-radius: 8px; padding: 12px 16px; }
+        .input-box input { width: 100%; background: transparent; border: none; color: white; outline: none; }
 
         @keyframes msgFade { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
+<div id="login-overlay">
+    <div class="login-box">
+        <h2>Welcome back!</h2>
+        <p>We're so excited to see you again!</p>
+        <div id="error-msg">That username is already taken.</div>
+        <input type="text" id="username-entry" placeholder="Enter a username">
+        <button class="login-btn" onclick="tryLogin()">Continue</button>
+    </div>
+</div>
+
 <div class="app-container">
     <nav class="server-list">
-        <div class="server-icon global-icon" onclick="switchView('global')">G</div>
-        <div id="added-servers"></div>
-        <div class="server-icon" style="color:#23a55a" onclick="addNewServer()">+</div>
+        <div class="server-icon global-icon active">G</div>
     </nav>
 
     <aside class="sidebar-panel">
-        <div class="panel-header">
-            <span>Global Hub</span>
-        </div>
-        <div id="sidebar-list" style="padding-top: 8px;">
-            <div class="list-item active"># global-chat</div>
-            <div class="list-item"># media-only</div>
+        <div class="panel-header">Global Hub</div>
+        <div style="padding-top: 8px;">
+            <div style="padding: 8px 12px; margin: 2px 8px; border-radius: 4px; background: #35373c; color: #fff; cursor: pointer;"># global-chat</div>
         </div>
         
-        <div class="user-bar" onclick="openProfileSettings()">
-            <div class="avatar" id="my-avatar-display"></div>
+        <div class="user-bar">
+            <div class="avatar"></div>
             <div class="user-info">
-                <div style="font-weight:bold; color:white; font-size:13px;" id="my-name-display">Jewel</div>
-                <div id="my-tag-display" class="tag-badge">OWNER</div>
+                <div style="font-weight:bold; color:white; font-size:13px;" id="my-name">Guest</div>
+                <div id="my-tag" class="tag-badge">USER</div>
             </div>
-            <span style="color:#b5bac1;">⚙️</span>
         </div>
     </aside>
 
     <main class="chat-area">
-        <div class="panel-header">
-            <span id="header-chan"># global-chat</span>
-            <span class="sync-indicator" id="sync-status">● LIVE SYNC</span>
-        </div>
+        <div class="panel-header"># global-chat</div>
         <div class="messages" id="chat-flow"></div>
         <div class="input-wrap">
             <div class="input-box">
@@ -92,69 +96,73 @@
 </div>
 
 <script>
-    // --- STATE MANAGEMENT ---
-    let state = {
-        user: {
-            name: localStorage.getItem('dc-name') || "Jewel",
-            tag: localStorage.getItem('dc-tag') || "OWNER",
-            pfp: localStorage.getItem('dc-pfp') || ""
-        },
-        messages: []
-    };
+    let currentUser = localStorage.getItem('dc-username') || "";
+    let globalMessages = [];
 
-    // --- SECURE SYNC LOGIC ---
-    // This calls YOUR Vercel Serverless Function, which hides the JSONbin keys
-    async function syncGlobal() {
+    // --- LOGIN LOGIC ---
+    async function tryLogin() {
+        const input = document.getElementById('username-entry').value.trim();
+        const error = document.getElementById('error-msg');
+        
+        if (!input) return;
+
+        // Fetch global messages to check if user exists
         try {
             const res = await fetch('/api/chat');
             const data = await res.json();
+            const messages = data.messages || [];
             
-            // Only re-render if we have new messages
-            if (JSON.stringify(data.messages) !== JSON.stringify(state.messages)) {
-                state.messages = data.messages || [];
-                renderMessages();
+            // Check if username has been used by someone else
+            const taken = messages.some(m => m.user.toLowerCase() === input.toLowerCase());
+            
+            if (taken) {
+                error.style.display = "block";
+            } else {
+                currentUser = input;
+                localStorage.setItem('dc-username', input);
+                document.getElementById('login-overlay').classList.add('hidden');
+                document.getElementById('my-name').innerText = currentUser;
+                syncGlobal();
             }
-            document.getElementById('sync-status').style.color = "#23a55a";
         } catch (e) {
-            document.getElementById('sync-status').style.color = "#f04747";
-            console.warn("Sync failed. Ensure /api/chat.js exists on Vercel.");
+            console.error("Connection failed. Check api/chat.js on Vercel.");
         }
     }
 
-    async function sendGlobal(text) {
-        const payload = {
-            user: state.user.name,
-            tag: state.user.tag,
-            pfp: state.user.pfp,
-            text: text,
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        };
+    // --- GLOBAL SYNC ---
+    async function syncGlobal() {
+        if (!currentUser) return;
+        try {
+            const res = await fetch('/api/chat');
+            const data = await res.json();
+            if (JSON.stringify(data.messages) !== JSON.stringify(globalMessages)) {
+                globalMessages = data.messages || [];
+                renderMessages();
+            }
+        } catch (e) { console.warn("Syncing..."); }
+    }
 
-        // UI Optimism: Show locally first
-        state.messages.push(payload);
+    async function pushGlobalMessage(msg) {
+        globalMessages.push(msg);
         renderMessages();
-
         try {
             await fetch('/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                body: JSON.stringify(msg)
             });
-        } catch (e) {
-            console.error("Failed to push to global database.");
-        }
+        } catch (e) { console.error("Database push failed."); }
     }
 
-    // --- UI RENDERING ---
+    // --- UI ENGINE ---
     function renderMessages() {
         const flow = document.getElementById('chat-flow');
-        flow.innerHTML = state.messages.map(m => `
+        flow.innerHTML = globalMessages.map(m => `
             <div class="msg-row">
-                <div class="avatar" style="width:40px; height:40px; background-image:url('${m.pfp || ''}'); background-color:#5865f2;"></div>
+                <div class="avatar" style="width:40px; height:40px; background:#5865f2;"></div>
                 <div class="msg-content">
                     <div class="msg-author">
-                        ${m.user} <span class="tag-badge">${m.tag}</span>
-                        <span style="font-size:11px; color:#949ba4; font-weight:normal;">${m.time || ''}</span>
+                        ${m.user} <span class="tag-badge">${m.tag || 'USER'}</span>
                     </div>
                     <div class="msg-text">${m.text}</div>
                 </div>
@@ -165,42 +173,24 @@
 
     function handleKey(e) {
         if (e.key === 'Enter' && e.target.value.trim() !== "") {
-            sendGlobal(e.target.value);
+            const payload = {
+                user: currentUser,
+                tag: currentUser === "Jewel" ? "OWNER" : "USER",
+                text: e.target.value
+            };
+            pushGlobalMessage(payload);
             e.target.value = "";
         }
     }
 
-    function openProfileSettings() {
-        const n = prompt("Change Name:", state.user.name);
-        const t = prompt("Change Tag (Visible to all):", state.user.tag);
-        const p = prompt("PFP Image URL:", state.user.pfp);
-        
-        if (n) { state.user.name = n; localStorage.setItem('dc-name', n); }
-        if (t) { state.user.tag = t; localStorage.setItem('dc-tag', t); }
-        if (p) { state.user.pfp = p; localStorage.setItem('dc-pfp', p); }
-        updateProfileUI();
+    // Check if we need to show login
+    if (currentUser) {
+        document.getElementById('login-overlay').classList.add('hidden');
+        document.getElementById('my-name').innerText = currentUser;
+        syncGlobal();
     }
 
-    function updateProfileUI() {
-        document.getElementById('my-name-display').innerText = state.user.name;
-        document.getElementById('my-tag-display').innerText = state.user.tag;
-        if (state.user.pfp) {
-            document.getElementById('my-avatar-display').style.backgroundImage = `url('${state.user.pfp}')`;
-        }
-    }
-
-    function addNewServer() {
-        const name = prompt("Server Name:");
-        if (name) {
-            const container = document.getElementById('added-servers');
-            container.innerHTML += `<div class="server-icon">${name[0].toUpperCase()}</div>`;
-        }
-    }
-
-    // --- STARTUP ---
-    updateProfileUI();
-    syncGlobal();
-    setInterval(syncGlobal, 4000); // Check for other people's messages every 4 seconds
+    setInterval(syncGlobal, 4000);
 </script>
 
 </body>
