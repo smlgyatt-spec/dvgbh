@@ -1,10 +1,9 @@
 // api/chat.js
 export default async function handler(req, res) {
-  // HIDDEN CREDENTIALS - These never reach the user's browser
   const BIN_ID = "69bf3194aa77b81da907b7a4"; 
   const API_KEY = "$2a$10$0Rjs4kz2ItckdcS2D19W2eGLaGA1xjDzpH/fkVcoag18A9VbMs7Uy";
   const URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
-  
+
   try {
     // GET: Fetch all global messages
     if (req.method === 'GET') {
