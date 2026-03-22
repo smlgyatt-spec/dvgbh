@@ -7,163 +7,120 @@
         :root {
             --bg-dark: #313338; --bg-side: #2b2d31; --bg-servers: #1e1f22;
             --text-main: #dbdee1; --accent: #5865f2; --nitro-pink: #ff73fa;
-            --profile-bg: #232428;
         }
-
         body, html { margin: 0; padding: 0; font-family: sans-serif; height: 100%; background: var(--bg-dark); color: var(--text-main); overflow: hidden; }
         .app { display: flex; height: 100vh; }
-
-        /* Sidebar Elements */
         .servers { width: 72px; background: var(--bg-servers); display: flex; flex-direction: column; align-items: center; padding: 12px 0; gap: 8px; }
-        .logo-circle { width: 48px; height: 48px; background: linear-gradient(45deg, #5865f2, #ff73fa); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; color: white; font-size: 20px; }
-        
+        .logo { width: 48px; height: 48px; background: linear-gradient(45deg, #5865f2, #ff73fa); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; color: white; }
         .channels { width: 240px; background: var(--bg-side); display: flex; flex-direction: column; }
-        .header { height: 48px; padding: 0 16px; display: flex; align-items: center; font-weight: bold; border-bottom: 1px solid rgba(0,0,0,0.2); }
-        .channel-link { padding: 8px 12px; margin: 2px 8px; border-radius: 4px; cursor: pointer; color: #949ba4; }
-        .channel-link.active { background: #35373c; color: white; }
-        .add-btn { margin: 10px; padding: 8px; background: #23a55a; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; }
-
-        /* Chat Area */
+        .header { height: 48px; padding: 0 16px; display: flex; align-items: center; font-weight: bold; border-bottom: 1px solid rgba(0,0,0,0.2); justify-content: space-between; }
+        .link { padding: 8px 12px; margin: 2px 8px; border-radius: 4px; cursor: pointer; color: #949ba4; }
+        .link.active { background: #35373c; color: white; }
         .main { flex: 1; display: flex; flex-direction: column; }
         .messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
-        .msg { display: flex; gap: 15px; }
-        .avatar { width: 40px; height: 40px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-        .msg-content { flex: 1; }
-        .author { font-weight: bold; color: white; margin-right: 8px; }
-        .tag { background: rgba(0,0,0,0.3); color: var(--nitro-pink); font-size: 10px; padding: 2px 5px; border-radius: 3px; }
-
+        .msg { display: flex; gap: 12px; }
+        .avatar { width: 35px; height: 35px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; }
         .input-area { padding: 20px; }
         .input-box { background: #383a40; padding: 12px; border-radius: 8px; }
         input { width: 100%; background: transparent; border: none; color: white; outline: none; }
-        
-        .clear-btn { background: #f23f43; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; float: right; }
-        .hidden { display: none; }
+        .add-btn { margin: 10px; padding: 8px; background: #23a55a; color: white; border: none; border-radius: 4px; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div class="app">
     <div class="servers">
-        <div class="logo-circle">D</div>
+        <div class="logo">D</div>
     </div>
-
     <div class="channels">
         <div class="header">Direct Messages</div>
-        <div id="dm-list" style="padding-top: 10px;">
-            <div class="channel-link active" onclick="switchRoom('GLOBAL_BIN_ID', 'global-chat')"># global-chat</div>
+        <div id="room-list">
+            <div class="link active" onclick="setRoom('global')"># global-chat</div>
         </div>
-        <button class="add-btn" onclick="addFriend()">+ Add Friend (DM)</button>
-        
-        <div style="margin-top: auto; padding: 10px; background: #232428; display: flex; align-items: center; gap: 10px;">
-            <div class="avatar" style="width:30px; height:30px;">S</div>
-            <div>
-                <div style="font-weight:bold; font-size:12px;">Sam</div>
-                <div style="font-size:10px; color: var(--nitro-pink);">OWNER</div>
-            </div>
-        </div>
+        <button class="add-btn" onclick="addNewFriend()">+ Add Friend</button>
     </div>
-
     <div class="main">
         <div class="header">
-            <span id="current-room-name"># global-chat</span>
-            <button id="admin-clear" class="clear-btn hidden" onclick="clearChat()">Clear</button>
+            <span id="room-title"># global-chat</span>
+            <button onclick="clearChat()" style="background:red; color:white; border:none; padding:4px; border-radius:4px; font-size:10px; cursor:pointer;">CLEAR</button>
         </div>
-        <div class="messages" id="msg-flow"></div>
+        <div class="messages" id="flow"></div>
         <div class="input-area">
-            <div class="input-box">
-                <input type="text" id="chat-input" placeholder="Message..." onkeypress="handleKey(event)">
-            </div>
+            <div class="input-box"><input type="text" id="msg-in" placeholder="Message..." onkeypress="handle(event)"></div>
         </div>
     </div>
 </div>
 
 <script>
-    let myName = "Sam";
-    let activeRoomId = "GLOBAL_BIN_ID"; // Start with global
-    let chatHistory = [];
-    let friends = JSON.parse(localStorage.getItem('dc-friends')) || [];
+    const myName = "Sam";
+    let currentRoom = "global"; 
+    let allMsgs = [];
+    let friends = JSON.parse(localStorage.getItem('my-friends')) || [];
 
-    function switchRoom(id, name) {
-        activeRoomId = id;
-        document.getElementById('current-room-name').innerText = name;
-        document.querySelectorAll('.channel-link').forEach(el => el.classList.remove('active'));
-        // We'll update UI highlights in the render function
-        refreshChat();
+    function setRoom(room) {
+        currentRoom = room;
+        document.getElementById('room-title').innerText = room === 'global' ? '# global-chat' : '@ ' + room.replace(myName+'-', '');
+        renderRooms();
+        renderMessages();
     }
 
-    function addFriend() {
+    function addNewFriend() {
         const name = prompt("Friend's Name:");
-        const id = prompt("Friend's Bin ID:");
-        if (name && id) {
-            friends.push({ name, id });
-            localStorage.setItem('dc-friends', JSON.stringify(friends));
-            renderFriendList();
-        }
-    }
-
-    function renderFriendList() {
-        const list = document.getElementById('dm-list');
-        list.innerHTML = `<div class="channel-link ${activeRoomId === 'GLOBAL_BIN_ID' ? 'active' : ''}" onclick="switchRoom('GLOBAL_BIN_ID', 'global-chat')"># global-chat</div>`;
-        friends.forEach(f => {
-            list.innerHTML += `<div class="channel-link ${activeRoomId === f.id ? 'active' : ''}" onclick="switchRoom('${f.id}', '@${f.name}')">@ ${f.name}</div>`;
-        });
-    }
-
-    async function refreshChat() {
-        try {
-            const res = await fetch(`/api/chat?roomId=${activeRoomId}`);
-            const data = await res.json();
-            if (JSON.stringify(data.messages) !== JSON.stringify(chatHistory)) {
-                chatHistory = data.messages || [];
-                renderMessages();
+        if (name) {
+            // Create a unique room name like "Sam-Cold"
+            const roomName = [myName, name].sort().join('-'); 
+            if (!friends.includes(roomName)) {
+                friends.push(roomName);
+                localStorage.setItem('my-friends', JSON.stringify(friends));
             }
-        } catch (e) { console.log("Syncing..."); }
-    }
-
-    async function sendMessage(text) {
-        const msg = { user: myName, tag: "OWNER", text: text };
-        await fetch(`/api/chat?roomId=${activeRoomId}`, {
-            method: 'POST',
-            body: JSON.stringify(msg)
-        });
-        refreshChat();
-    }
-
-    async function clearChat() {
-        if (confirm("Clear room?")) {
-            await fetch(`/api/chat?roomId=${activeRoomId}`, {
-                method: 'POST',
-                body: JSON.stringify({ action: "CLEAR_ALL", user: myName })
-            });
-            refreshChat();
+            setRoom(roomName);
         }
+    }
+
+    async function sync() {
+        const res = await fetch('/api/chat');
+        const data = await res.json();
+        allMsgs = data.messages || [];
+        renderMessages();
+    }
+
+    async function send(text) {
+        await fetch('/api/chat', {
+            method: 'POST',
+            body: JSON.stringify({ user: myName, text: text, room: currentRoom })
+        });
+        sync();
     }
 
     function renderMessages() {
-        const flow = document.getElementById('msg-flow');
-        flow.innerHTML = chatHistory.map(m => `
+        const flow = document.getElementById('flow');
+        // FILTER: Only show messages for the room we are in
+        const filtered = allMsgs.filter(m => m.room === currentRoom);
+        
+        flow.innerHTML = filtered.map(m => `
             <div class="msg">
                 <div class="avatar">${m.user[0]}</div>
-                <div class="msg-content">
-                    <div><span class="author">${m.user}</span><span class="tag">${m.tag}</span></div>
-                    <div style="color:#dbdee1; margin-top:4px;">${m.text}</div>
+                <div>
+                    <div style="font-weight:bold; font-size:13px;">${m.user}</div>
+                    <div style="color:#dbdee1;">${m.text}</div>
                 </div>
             </div>
         `).join('');
         flow.scrollTop = flow.scrollHeight;
     }
 
-    function handleKey(e) {
-        if (e.key === 'Enter' && e.target.value.trim() !== "") {
-            sendMessage(e.target.value);
-            e.target.value = "";
-        }
+    function renderRooms() {
+        const list = document.getElementById('room-list');
+        list.innerHTML = `<div class="link ${currentRoom === 'global' ? 'active' : ''}" onclick="setRoom('global')"># global-chat</div>`;
+        friends.forEach(f => {
+            list.innerHTML += `<div class="link ${currentRoom === f ? 'active' : ''}" onclick="setRoom('${f}')">@ ${f.replace(myName+'-', '').replace('-', '')}</div>`;
+        });
     }
 
-    // Initialize
-    if (myName.toLowerCase() === 'sam') document.getElementById('admin-clear').classList.remove('hidden');
-    renderFriendList();
-    setInterval(refreshChat, 3000);
+    function handle(e) { if(e.key === 'Enter' && e.target.value.trim()){ send(e.target.value); e.target.value = ""; } }
+    
+    renderRooms();
+    setInterval(sync, 3000);
 </script>
 </body>
 </html>
