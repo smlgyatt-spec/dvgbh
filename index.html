@@ -175,7 +175,7 @@
         if (e.key === 'Enter' && e.target.value.trim() !== "") {
             const payload = {
                 user: currentUser,
-                tag: currentUser === "Jewel" ? "OWNER" : "USER",
+                tag: currentUser === "Sam" ? "OWNER" : "USER",
                 text: e.target.value
             };
             pushGlobalMessage(payload);
