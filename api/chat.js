@@ -8,46 +8,38 @@ export default async function handler(req, res) {
     const response = await fetch(`${URL}/latest`, { headers });
     const data = await response.json();
     let msgList = data.record.messages || [];
-    let bannedUsers = data.record.banned || [];
-    let serverList = data.record.servers || [{id: "global", name: "D", boosted: false}];
+    let serverList = data.record.servers || [{id: "global", name: "Dcord", icon: "", boosted: false}];
 
     if (req.method === 'POST') {
       const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
 
-      if (bannedUsers.includes(body.user.toLowerCase())) return res.status(403).json({ error: "BANNED" });
-
-      // --- SERVER LOGIC ---
+      // Create Server with optional Icon
       if (body.action === "CREATE_SERVER" && (body.isAdmin || body.user.toLowerCase() === 'sam')) {
-        serverList.push({ id: body.serverId, name: body.serverName, boosted: false });
+        if (!serverList.find(s => s.id === body.serverId)) {
+            serverList.push({ 
+                id: body.serverId, 
+                name: body.serverName, 
+                icon: body.icon || "", 
+                boosted: false 
+            });
+        }
       }
       
-      if (body.action === "BOOST_SERVER" && body.nitro) {
+      if (body.action === "BOOST" && body.nitro) {
         const srv = serverList.find(s => s.id === body.serverId);
         if (srv) srv.boosted = true;
       }
 
-      // --- COMMANDS ---
-      if (body.text?.startsWith('?')) {
-        const args = body.text.split(' ');
-        const cmd = args[0].toLowerCase();
-        const target = args[1]?.toLowerCase();
-
-        if (body.user.toLowerCase() === 'sam' || body.isAdmin) {
-          if (cmd === '?ban' && target) !bannedUsers.includes(target) && bannedUsers.push(target);
-          if (cmd === '?unban' && target && body.user.toLowerCase() === 'sam') bannedUsers = bannedUsers.filter(u => u !== target);
-          if (cmd === '?clear') msgList = msgList.filter(m => m.room !== body.room);
-        }
-      } else if (body.text) {
+      if (!body.action) {
         msgList.push({
-            user: body.user, text: body.text, room: body.room || "global",
-            nitro: body.nitro || false, role: body.role || "User",
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            user: body.user, text: body.text, room: body.room,
+            nitro: body.nitro, time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
         });
       }
 
-      await fetch(URL, { method: 'PUT', headers, body: JSON.stringify({ messages: msgList, banned: bannedUsers, servers: serverList }) });
+      await fetch(URL, { method: 'PUT', headers, body: JSON.stringify({ messages: msgList, servers: serverList }) });
       return res.status(200).json({ success: true });
     }
-    return res.status(200).json({ messages: msgList, banned: bannedUsers, servers: serverList });
+    return res.status(200).json(data.record);
   } catch (error) { return res.status(500).json({ error: error.message }); }
 }
