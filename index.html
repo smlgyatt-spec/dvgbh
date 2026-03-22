@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>dcord | Global Nitro</title>
+    <title>dcord | Sam Edition</title>
     <style>
         :root {
             --bg-dark: #313338; --bg-side: #2b2d31; --bg-servers: #1e1f22;
@@ -16,24 +16,18 @@
 
         /* Login Overlay */
         #login-overlay { position: fixed; inset: 0; background: #1e1f22; z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .login-box { background: #313338; padding: 32px; border-radius: 8px; width: 400px; box-shadow: 0 8px 16px rgba(0,0,0,0.2); }
-        .login-box h2 { text-align: center; margin-bottom: 8px; color: white; }
-        .login-box p { text-align: center; color: #b5bac1; font-size: 14px; margin-bottom: 20px; }
-        input[type="text"] { width: 100%; padding: 12px; background: #1e1f22; border: 1px solid #1e1f22; border-radius: 4px; color: white; outline: none; margin-bottom: 15px; box-sizing: border-box; }
-        .login-btn { width: 100%; padding: 12px; background: var(--accent); color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .login-btn:hover { background: #4752c4; }
-        #error-msg { color: #f23f43; font-size: 12px; margin-bottom: 10px; text-align: center; display: none; }
+        .login-box { background: #313338; padding: 32px; border-radius: 8px; width: 400px; box-shadow: 0 8px 16px rgba(0,0,0,0.2); text-align: center; }
+        input { width: 100%; padding: 12px; background: #1e1f22; border: 1px solid #444; border-radius: 4px; color: white; outline: none; margin-bottom: 15px; box-sizing: border-box; }
+        .login-btn { width: 100%; padding: 12px; background: var(--accent); color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; }
 
-        /* Sidebar & Navigation */
+        /* Panels */
         .server-list { width: 72px; background: var(--bg-servers); display: flex; flex-direction: column; align-items: center; padding: 12px 0; gap: 8px; flex-shrink: 0; }
-        .server-icon { width: 48px; height: 48px; background: var(--bg-dark); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; font-weight: bold; color: white; }
-        .server-icon:hover, .server-icon.active { border-radius: 30%; background: var(--accent); }
+        .server-icon { width: 48px; height: 48px; background: var(--bg-dark); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; color: white; }
         .global-icon { background: linear-gradient(45deg, var(--nitro-purple), var(--nitro-pink)); }
 
         .sidebar-panel { width: 240px; background: var(--bg-side); display: flex; flex-direction: column; }
-        .panel-header { height: 48px; padding: 0 16px; display: flex; align-items: center; font-weight: bold; border-bottom: 1px solid rgba(0,0,0,0.2); font-size: 15px; }
+        .panel-header { height: 48px; padding: 0 16px; display: flex; align-items: center; font-weight: bold; border-bottom: 1px solid rgba(0,0,0,0.2); justify-content: space-between; }
         
-        /* User Bar */
         .user-bar { padding: 8px; background: var(--profile-bg); display: flex; align-items: center; gap: 10px; border-top: 1px solid rgba(0,0,0,0.2); margin-top: auto; }
         .avatar { width: 32px; height: 32px; background: var(--accent); border-radius: 50%; }
         .tag-badge { background: rgba(0,0,0,0.5); color: var(--nitro-pink); padding: 1px 5px; border-radius: 4px; font-size: 10px; font-weight: 900; }
@@ -42,25 +36,25 @@
         .chat-area { flex: 1; display: flex; flex-direction: column; background: var(--bg-dark); }
         .messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 18px; }
         .msg-row { display: flex; gap: 16px; animation: msgFade 0.2s ease; }
-        .msg-author { font-weight: bold; color: white; font-size: 14px; margin-bottom: 2px; display: flex; align-items: center; gap: 8px; }
+        .msg-author { font-weight: bold; color: white; font-size: 14px; display: flex; align-items: center; gap: 8px; }
         .msg-text { color: var(--text-main); font-size: 15px; }
 
         .input-wrap { padding: 0 20px 24px; }
         .input-box { background: #383a40; border-radius: 8px; padding: 12px 16px; }
         .input-box input { width: 100%; background: transparent; border: none; color: white; outline: none; }
-
-        @keyframes msgFade { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .clear-btn { background: #f23f43; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div id="login-overlay">
     <div class="login-box">
-        <h2>Welcome back!</h2>
-        <p>We're so excited to see you again!</p>
-        <div id="error-msg">That username is already taken.</div>
-        <input type="text" id="username-entry" placeholder="Enter a username">
-        <button class="login-btn" onclick="tryLogin()">Continue</button>
+        <h2 style="color:white; margin-bottom:10px;">dcord</h2>
+        <p style="color:#b5bac1; margin-bottom:20px;">Enter your username to join the chat</p>
+        <div id="error-msg" style="color:#f23f43; display:none; margin-bottom:10px;">Name taken.</div>
+        <input type="text" id="username-entry" placeholder="Username">
+        <button class="login-btn" onclick="tryLogin()">Join Chat</button>
     </div>
 </div>
 
@@ -68,13 +62,9 @@
     <nav class="server-list">
         <div class="server-icon global-icon active">G</div>
     </nav>
-
     <aside class="sidebar-panel">
         <div class="panel-header">Global Hub</div>
-        <div style="padding-top: 8px;">
-            <div style="padding: 8px 12px; margin: 2px 8px; border-radius: 4px; background: #35373c; color: #fff; cursor: pointer;"># global-chat</div>
-        </div>
-        
+        <div style="padding: 8px;"><div style="background:#35373c; color:white; padding:8px; border-radius:4px;"># global-chat</div></div>
         <div class="user-bar">
             <div class="avatar"></div>
             <div class="user-info">
@@ -83,14 +73,14 @@
             </div>
         </div>
     </aside>
-
     <main class="chat-area">
-        <div class="panel-header"># global-chat</div>
+        <div class="panel-header">
+            <span># global-chat</span>
+            <button id="clear-btn" class="clear-btn hidden" onclick="clearChat()">CLEAR CHAT</button>
+        </div>
         <div class="messages" id="chat-flow"></div>
         <div class="input-wrap">
-            <div class="input-box">
-                <input type="text" id="main-input" placeholder="Message global-chat" onkeypress="handleKey(event)">
-            </div>
+            <div class="input-box"><input type="text" id="main-input" placeholder="Message global-chat" onkeypress="handleKey(event)"></div>
         </div>
     </main>
 </div>
@@ -99,37 +89,34 @@
     let currentUser = localStorage.getItem('dc-username') || "";
     let globalMessages = [];
 
-    // --- LOGIN LOGIC ---
     async function tryLogin() {
-        const input = document.getElementById('username-entry').value.trim();
-        const error = document.getElementById('error-msg');
-        
-        if (!input) return;
+        const user = document.getElementById('username-entry').value.trim();
+        if (!user) return;
 
-        // Fetch global messages to check if user exists
-        try {
-            const res = await fetch('/api/chat');
-            const data = await res.json();
-            const messages = data.messages || [];
-            
-            // Check if username has been used by someone else
-            const taken = messages.some(m => m.user.toLowerCase() === input.toLowerCase());
-            
-            if (taken) {
-                error.style.display = "block";
-            } else {
-                currentUser = input;
-                localStorage.setItem('dc-username', input);
-                document.getElementById('login-overlay').classList.add('hidden');
-                document.getElementById('my-name').innerText = currentUser;
-                syncGlobal();
-            }
-        } catch (e) {
-            console.error("Connection failed. Check api/chat.js on Vercel.");
+        const res = await fetch('/api/chat');
+        const data = await res.json();
+        const taken = (data.messages || []).some(m => m.user.toLowerCase() === user.toLowerCase() && user.toLowerCase() !== 'sam');
+
+        if (taken) {
+            document.getElementById('error-msg').style.display = "block";
+        } else {
+            currentUser = user;
+            localStorage.setItem('dc-username', user);
+            startApp();
         }
     }
 
-    // --- GLOBAL SYNC ---
+    function startApp() {
+        document.getElementById('login-overlay').classList.add('hidden');
+        document.getElementById('my-name').innerText = currentUser;
+        
+        if (currentUser.toLowerCase() === 'sam') {
+            document.getElementById('my-tag').innerText = "OWNER";
+            document.getElementById('clear-btn').classList.remove('hidden');
+        }
+        syncGlobal();
+    }
+
     async function syncGlobal() {
         if (!currentUser) return;
         try {
@@ -142,28 +129,39 @@
         } catch (e) { console.warn("Syncing..."); }
     }
 
-    async function pushGlobalMessage(msg) {
-        globalMessages.push(msg);
-        renderMessages();
-        try {
+    async function clearChat() {
+        if (confirm("Wipe all messages for everyone?")) {
             await fetch('/api/chat', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(msg)
+                body: JSON.stringify({ action: "CLEAR_ALL", user: currentUser })
             });
-        } catch (e) { console.error("Database push failed."); }
+            syncGlobal();
+        }
     }
 
-    // --- UI ENGINE ---
+    async function pushMessage(text) {
+        const msg = {
+            user: currentUser,
+            tag: currentUser.toLowerCase() === 'sam' ? "OWNER" : "USER",
+            text: text,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        };
+        globalMessages.push(msg);
+        renderMessages();
+        await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(msg)
+        });
+    }
+
     function renderMessages() {
         const flow = document.getElementById('chat-flow');
         flow.innerHTML = globalMessages.map(m => `
             <div class="msg-row">
                 <div class="avatar" style="width:40px; height:40px; background:#5865f2;"></div>
                 <div class="msg-content">
-                    <div class="msg-author">
-                        ${m.user} <span class="tag-badge">${m.tag || 'USER'}</span>
-                    </div>
+                    <div class="msg-author">${m.user} <span class="tag-badge">${m.tag}</span> <span style="font-size:10px; color:#949ba4;">${m.time || ''}</span></div>
                     <div class="msg-text">${m.text}</div>
                 </div>
             </div>
@@ -173,25 +171,13 @@
 
     function handleKey(e) {
         if (e.key === 'Enter' && e.target.value.trim() !== "") {
-            const payload = {
-                user: currentUser,
-                tag: currentUser === "Sam" ? "OWNER" : "USER",
-                text: e.target.value
-            };
-            pushGlobalMessage(payload);
+            pushMessage(e.target.value);
             e.target.value = "";
         }
     }
 
-    // Check if we need to show login
-    if (currentUser) {
-        document.getElementById('login-overlay').classList.add('hidden');
-        document.getElementById('my-name').innerText = currentUser;
-        syncGlobal();
-    }
-
-    setInterval(syncGlobal, 4000);
+    if (currentUser) startApp();
+    setInterval(syncGlobal, 3000);
 </script>
-
 </body>
 </html>
