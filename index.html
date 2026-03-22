@@ -7,162 +7,146 @@
         :root {
             --bg-dark: #313338; --bg-side: #2b2d31; --bg-servers: #1e1f22;
             --text-main: #dbdee1; --accent: #5865f2; --nitro-pink: #ff73fa;
-            --nitro-purple: #8547eb; --profile-bg: #232428;
+            --profile-bg: #232428;
         }
 
-        body, html { margin: 0; padding: 0; font-family: 'gg sans', sans-serif; height: 100%; overflow: hidden; background: var(--bg-dark); color: var(--text-main); }
-        .app-container { display: flex; height: 100vh; width: 100vw; }
-        .hidden { display: none !important; }
+        body, html { margin: 0; padding: 0; font-family: sans-serif; height: 100%; background: var(--bg-dark); color: var(--text-main); overflow: hidden; }
+        .app { display: flex; height: 100vh; }
 
-        /* Login Overlay */
-        #login-overlay { position: fixed; inset: 0; background: #1e1f22; z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .login-box { background: #313338; padding: 32px; border-radius: 8px; width: 400px; box-shadow: 0 8px 16px rgba(0,0,0,0.2); text-align: center; }
-        input { width: 100%; padding: 12px; background: #1e1f22; border: 1px solid #444; border-radius: 4px; color: white; outline: none; margin-bottom: 15px; box-sizing: border-box; }
-        .login-btn { width: 100%; padding: 12px; background: var(--accent); color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; }
-
-        /* Panels */
-        .server-list { width: 72px; background: var(--bg-servers); display: flex; flex-direction: column; align-items: center; padding: 12px 0; gap: 8px; flex-shrink: 0; }
-        .server-icon { width: 48px; height: 48px; background: var(--bg-dark); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; color: white; }
-        .global-icon { background: linear-gradient(45deg, var(--nitro-purple), var(--nitro-pink)); }
-
-        .sidebar-panel { width: 240px; background: var(--bg-side); display: flex; flex-direction: column; }
-        .panel-header { height: 48px; padding: 0 16px; display: flex; align-items: center; font-weight: bold; border-bottom: 1px solid rgba(0,0,0,0.2); justify-content: space-between; }
+        /* Sidebar Elements */
+        .servers { width: 72px; background: var(--bg-servers); display: flex; flex-direction: column; align-items: center; padding: 12px 0; gap: 8px; }
+        .logo-circle { width: 48px; height: 48px; background: linear-gradient(45deg, #5865f2, #ff73fa); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; color: white; font-size: 20px; }
         
-        .user-bar { padding: 8px; background: var(--profile-bg); display: flex; align-items: center; gap: 10px; border-top: 1px solid rgba(0,0,0,0.2); margin-top: auto; }
-        .avatar { width: 32px; height: 32px; background: var(--accent); border-radius: 50%; }
-        .tag-badge { background: rgba(0,0,0,0.5); color: var(--nitro-pink); padding: 1px 5px; border-radius: 4px; font-size: 10px; font-weight: 900; }
+        .channels { width: 240px; background: var(--bg-side); display: flex; flex-direction: column; }
+        .header { height: 48px; padding: 0 16px; display: flex; align-items: center; font-weight: bold; border-bottom: 1px solid rgba(0,0,0,0.2); }
+        .channel-link { padding: 8px 12px; margin: 2px 8px; border-radius: 4px; cursor: pointer; color: #949ba4; }
+        .channel-link.active { background: #35373c; color: white; }
+        .add-btn { margin: 10px; padding: 8px; background: #23a55a; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; }
 
-        /* Chat */
-        .chat-area { flex: 1; display: flex; flex-direction: column; background: var(--bg-dark); }
-        .messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 18px; }
-        .msg-row { display: flex; gap: 16px; animation: msgFade 0.2s ease; }
-        .msg-author { font-weight: bold; color: white; font-size: 14px; display: flex; align-items: center; gap: 8px; }
-        .msg-text { color: var(--text-main); font-size: 15px; }
+        /* Chat Area */
+        .main { flex: 1; display: flex; flex-direction: column; }
+        .messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
+        .msg { display: flex; gap: 15px; }
+        .avatar { width: 40px; height: 40px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        .msg-content { flex: 1; }
+        .author { font-weight: bold; color: white; margin-right: 8px; }
+        .tag { background: rgba(0,0,0,0.3); color: var(--nitro-pink); font-size: 10px; padding: 2px 5px; border-radius: 3px; }
 
-        .input-wrap { padding: 0 20px 24px; }
-        .input-box { background: #383a40; border-radius: 8px; padding: 12px 16px; }
-        .input-box input { width: 100%; background: transparent; border: none; color: white; outline: none; }
+        .input-area { padding: 20px; }
+        .input-box { background: #383a40; padding: 12px; border-radius: 8px; }
+        input { width: 100%; background: transparent; border: none; color: white; outline: none; }
         
-        .clear-btn { background: #f23f43; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: bold; }
+        .clear-btn { background: #f23f43; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; float: right; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
 
-<div id="login-overlay">
-    <div class="login-box">
-        <h2 style="color:white; margin-bottom:10px;">dcord</h2>
-        <p style="color:#b5bac1; margin-bottom:20px;">Enter your username to join the chat</p>
-        <div id="error-msg" style="color:#f23f43; display:none; margin-bottom:10px;">Name taken.</div>
-        <input type="text" id="username-entry" placeholder="Username">
-        <button class="login-btn" onclick="tryLogin()">Join Chat</button>
+<div class="app">
+    <div class="servers">
+        <div class="logo-circle">D</div>
+    </div>
+
+    <div class="channels">
+        <div class="header">Direct Messages</div>
+        <div id="dm-list" style="padding-top: 10px;">
+            <div class="channel-link active" onclick="switchRoom('GLOBAL_BIN_ID', 'global-chat')"># global-chat</div>
+        </div>
+        <button class="add-btn" onclick="addFriend()">+ Add Friend (DM)</button>
+        
+        <div style="margin-top: auto; padding: 10px; background: #232428; display: flex; align-items: center; gap: 10px;">
+            <div class="avatar" style="width:30px; height:30px;">S</div>
+            <div>
+                <div style="font-weight:bold; font-size:12px;">Sam</div>
+                <div style="font-size:10px; color: var(--nitro-pink);">OWNER</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main">
+        <div class="header">
+            <span id="current-room-name"># global-chat</span>
+            <button id="admin-clear" class="clear-btn hidden" onclick="clearChat()">Clear</button>
+        </div>
+        <div class="messages" id="msg-flow"></div>
+        <div class="input-area">
+            <div class="input-box">
+                <input type="text" id="chat-input" placeholder="Message..." onkeypress="handleKey(event)">
+            </div>
+        </div>
     </div>
 </div>
 
-<div class="app-container">
-    <nav class="server-list">
-        <div class="server-icon global-icon active">G</div>
-    </nav>
-    <aside class="sidebar-panel">
-        <div class="panel-header">Global Hub</div>
-        <div style="padding: 8px;"><div style="background:#35373c; color:white; padding:8px; border-radius:4px;"># global-chat</div></div>
-        <div class="user-bar">
-            <div class="avatar"></div>
-            <div class="user-info">
-                <div style="font-weight:bold; color:white; font-size:13px;" id="my-name">Guest</div>
-                <div id="my-tag" class="tag-badge">USER</div>
-            </div>
-        </div>
-    </aside>
-    <main class="chat-area">
-        <div class="panel-header">
-            <span># global-chat</span>
-            <button id="clear-btn" class="clear-btn hidden" onclick="clearChat()">CLEAR CHAT</button>
-        </div>
-        <div class="messages" id="chat-flow"></div>
-        <div class="input-wrap">
-            <div class="input-box"><input type="text" id="main-input" placeholder="Message global-chat" onkeypress="handleKey(event)"></div>
-        </div>
-    </main>
-</div>
-
 <script>
-    let currentUser = localStorage.getItem('dc-username') || "";
-    let globalMessages = [];
+    let myName = "Sam";
+    let activeRoomId = "GLOBAL_BIN_ID"; // Start with global
+    let chatHistory = [];
+    let friends = JSON.parse(localStorage.getItem('dc-friends')) || [];
 
-    async function tryLogin() {
-        const user = document.getElementById('username-entry').value.trim();
-        if (!user) return;
+    function switchRoom(id, name) {
+        activeRoomId = id;
+        document.getElementById('current-room-name').innerText = name;
+        document.querySelectorAll('.channel-link').forEach(el => el.classList.remove('active'));
+        // We'll update UI highlights in the render function
+        refreshChat();
+    }
 
-        const res = await fetch('/api/chat');
-        const data = await res.json();
-        const taken = (data.messages || []).some(m => m.user.toLowerCase() === user.toLowerCase() && user.toLowerCase() !== 'sam');
-
-        if (taken) {
-            document.getElementById('error-msg').style.display = "block";
-        } else {
-            currentUser = user;
-            localStorage.setItem('dc-username', user);
-            startApp();
+    function addFriend() {
+        const name = prompt("Friend's Name:");
+        const id = prompt("Friend's Bin ID:");
+        if (name && id) {
+            friends.push({ name, id });
+            localStorage.setItem('dc-friends', JSON.stringify(friends));
+            renderFriendList();
         }
     }
 
-    function startApp() {
-        document.getElementById('login-overlay').classList.add('hidden');
-        document.getElementById('my-name').innerText = currentUser;
-        
-        if (currentUser.toLowerCase() === 'sam') {
-            document.getElementById('my-tag').innerText = "OWNER";
-            document.getElementById('clear-btn').classList.remove('hidden');
-        }
-        syncGlobal();
-    }
-
-    async function syncGlobal() {
-        if (!currentUser) return;
-        try {
-            const res = await fetch('/api/chat');
-            const data = await res.json();
-            if (JSON.stringify(data.messages) !== JSON.stringify(globalMessages)) {
-                globalMessages = data.messages || [];
-                renderMessages();
-            }
-        } catch (e) { console.warn("Syncing..."); }
-    }
-
-    async function clearChat() {
-        if (confirm("Wipe all messages for everyone?")) {
-            await fetch('/api/chat', {
-                method: 'POST',
-                body: JSON.stringify({ action: "CLEAR_ALL", user: currentUser })
-            });
-            syncGlobal();
-        }
-    }
-
-    async function pushMessage(text) {
-        const msg = {
-            user: currentUser,
-            tag: currentUser.toLowerCase() === 'sam' ? "OWNER" : "USER",
-            text: text,
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        };
-        globalMessages.push(msg);
-        renderMessages();
-        await fetch('/api/chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(msg)
+    function renderFriendList() {
+        const list = document.getElementById('dm-list');
+        list.innerHTML = `<div class="channel-link ${activeRoomId === 'GLOBAL_BIN_ID' ? 'active' : ''}" onclick="switchRoom('GLOBAL_BIN_ID', 'global-chat')"># global-chat</div>`;
+        friends.forEach(f => {
+            list.innerHTML += `<div class="channel-link ${activeRoomId === f.id ? 'active' : ''}" onclick="switchRoom('${f.id}', '@${f.name}')">@ ${f.name}</div>`;
         });
     }
 
+    async function refreshChat() {
+        try {
+            const res = await fetch(`/api/chat?roomId=${activeRoomId}`);
+            const data = await res.json();
+            if (JSON.stringify(data.messages) !== JSON.stringify(chatHistory)) {
+                chatHistory = data.messages || [];
+                renderMessages();
+            }
+        } catch (e) { console.log("Syncing..."); }
+    }
+
+    async function sendMessage(text) {
+        const msg = { user: myName, tag: "OWNER", text: text };
+        await fetch(`/api/chat?roomId=${activeRoomId}`, {
+            method: 'POST',
+            body: JSON.stringify(msg)
+        });
+        refreshChat();
+    }
+
+    async function clearChat() {
+        if (confirm("Clear room?")) {
+            await fetch(`/api/chat?roomId=${activeRoomId}`, {
+                method: 'POST',
+                body: JSON.stringify({ action: "CLEAR_ALL", user: myName })
+            });
+            refreshChat();
+        }
+    }
+
     function renderMessages() {
-        const flow = document.getElementById('chat-flow');
-        flow.innerHTML = globalMessages.map(m => `
-            <div class="msg-row">
-                <div class="avatar" style="width:40px; height:40px; background:#5865f2;"></div>
+        const flow = document.getElementById('msg-flow');
+        flow.innerHTML = chatHistory.map(m => `
+            <div class="msg">
+                <div class="avatar">${m.user[0]}</div>
                 <div class="msg-content">
-                    <div class="msg-author">${m.user} <span class="tag-badge">${m.tag}</span> <span style="font-size:10px; color:#949ba4;">${m.time || ''}</span></div>
-                    <div class="msg-text">${m.text}</div>
+                    <div><span class="author">${m.user}</span><span class="tag">${m.tag}</span></div>
+                    <div style="color:#dbdee1; margin-top:4px;">${m.text}</div>
                 </div>
             </div>
         `).join('');
@@ -171,13 +155,15 @@
 
     function handleKey(e) {
         if (e.key === 'Enter' && e.target.value.trim() !== "") {
-            pushMessage(e.target.value);
+            sendMessage(e.target.value);
             e.target.value = "";
         }
     }
 
-    if (currentUser) startApp();
-    setInterval(syncGlobal, 3000);
+    // Initialize
+    if (myName.toLowerCase() === 'sam') document.getElementById('admin-clear').classList.remove('hidden');
+    renderFriendList();
+    setInterval(refreshChat, 3000);
 </script>
 </body>
 </html>
