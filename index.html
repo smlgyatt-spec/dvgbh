@@ -13,62 +13,51 @@
         .app { display: flex; height: 100vh; }
         .hidden { display: none !important; }
         
-        /* Sidebar */
-        .servers { width: 72px; background: var(--bg-servers); display: flex; flex-direction: column; align-items: center; padding: 12px 0; gap: 8px; }
-        .server-btn { width: 48px; height: 48px; background: var(--bg-dark); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; font-weight: bold; }
+        .servers { width: 72px; background: var(--bg-servers); display: flex; flex-direction: column; align-items: center; padding: 12px 0; gap: 8px; overflow-y: auto; }
+        .server-btn { width: 48px; height: 48px; background: var(--bg-dark); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; font-weight: bold; font-size: 18px; position: relative; }
         .server-btn:hover, .server-btn.active { border-radius: 30%; background: var(--accent); color: white; }
+        .boosted { border: 2px solid var(--nitro-pink); box-shadow: 0 0 10px var(--nitro-pink); }
 
         .channels { width: 240px; background: var(--bg-side); display: flex; flex-direction: column; }
         .header { height: 48px; padding: 0 16px; display: flex; align-items: center; font-weight: bold; border-bottom: 1px solid rgba(0,0,0,0.2); justify-content: space-between; }
         .link { padding: 8px 12px; margin: 2px 8px; border-radius: 4px; cursor: pointer; color: #949ba4; }
         .link.active { background: #35373c; color: white; }
         
-        /* Chat */
         .main { flex: 1; display: flex; flex-direction: column; }
         .messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
         .msg { display: flex; gap: 12px; }
         .avatar { width: 40px; height: 40px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0; }
         .nitro-glow { border: 2px solid var(--nitro-pink); box-shadow: 0 0 10px var(--nitro-pink); }
+        .badge { font-size: 9px; padding: 2px 4px; border-radius: 3px; margin-left: 5px; font-weight: bold; }
+        .bg-nitro { background: var(--nitro-pink); color: white; }
         
-        .badge { font-size: 9px; padding: 2px 4px; border-radius: 3px; margin-left: 5px; font-weight: bold; color: white; vertical-align: middle; }
-        .bg-nitro { background: var(--nitro-pink); }
-        .bg-admin { background: var(--admin-gold); color: black; }
-
         .input-box { padding: 20px; }
         input { width: 100%; background: #383a40; border: none; color: white; padding: 12px; border-radius: 8px; outline: none; }
-        
-        .ban-overlay { position: fixed; inset: 0; background: black; display: flex; flex-direction: column; align-items: center; justify-content: center; color: red; z-index: 10000; font-family: monospace; }
     </style>
 </head>
 <body>
 
-<div id="ban-screen" class="ban-overlay hidden">
-    <h1 style="font-size: 50px;">BANNED</h1>
-    <p>You have been banned from the dcord network.</p>
-</div>
-
 <div class="app">
-    <div class="servers">
-        <div class="server-btn active">D</div>
-        <div id="admin-add-server" class="server-btn hidden" onclick="addServer()" style="color:#23a55a">+</div>
-    </div>
+    <div class="servers" id="server-bar">
+        </div>
 
     <div class="channels">
-        <div class="header">
-            <span>Channels</span>
-            <span id="admin-add-chan" class="hidden" style="cursor:pointer" onclick="addChannel()">+</span>
+        <div class="header"><span id="server-title">Dcord</span></div>
+        <div id="chan-list" style="padding-top:10px;">
+            <div class="link active"># lounge</div>
         </div>
-        <div id="chan-list" style="padding-top:10px;"></div>
-        
         <div style="margin-top:auto; padding:15px; background:#232428;">
             <div id="ui-name" style="font-weight:bold;">User</div>
-            <div id="ui-role" style="font-size:10px; color:#949ba4;">Member</div>
+            <div style="font-size:10px; color:var(--nitro-pink); cursor:pointer;" onclick="boostServer()">💎 Boost Server</div>
             <div style="color:#f23f43; font-size:10px; cursor:pointer; margin-top:5px;" onclick="localStorage.clear(); location.reload();">Logout</div>
         </div>
     </div>
 
     <div class="main">
-        <div class="header"><span id="room-title"># global</span></div>
+        <div class="header">
+            <span id="room-title"># lounge</span>
+            <button class="btn" style="background:#23a55a; color:white; border:none; padding:5px; border-radius:4px; font-size:10px; cursor:pointer;" onclick="copyInv()">Invite</button>
+        </div>
         <div class="messages" id="flow"></div>
         <div class="input-box"><input type="text" id="chat-in" placeholder="Message..." onkeypress="handle(event)"></div>
     </div>
@@ -77,88 +66,81 @@
 <script>
     let myName = localStorage.getItem('dc-user') || prompt("Username:");
     localStorage.setItem('dc-user', myName);
-    
     let isSam = myName.toLowerCase() === 'sam';
-    let isAdmin = localStorage.getItem('dc-admin') === 'true' || isSam;
-    let currentRoom = "global";
-    let chans = JSON.parse(localStorage.getItem('dc-chans')) || ["global"];
-
-    function addChannel() {
-        const name = prompt("New Channel Name:");
-        if (name) { chans.push(name.toLowerCase()); localStorage.setItem('dc-chans', JSON.stringify(chans)); renderSidebar(); }
-    }
-
-    function addServer() {
-        const name = prompt("New Server Name:");
-        if (name) { alert("Server '" + name + "' created! (Invite system active)"); }
-    }
-
-    async function handle(e) {
-        if (e.key === 'Enter' && e.target.value.trim()) {
-            const text = e.target.value;
-            e.target.value = "";
-            
-            // Secret Sam Admin Trigger
-            if (text === "?admin Sam" && isSam) { 
-                isAdmin = true; localStorage.setItem('dc-admin', 'true'); 
-                location.reload(); return; 
-            }
-
-            const res = await fetch('/api/chat', {
-                method: 'POST',
-                body: JSON.stringify({
-                    user: myName, text, room: currentRoom,
-                    nitro: isSam, isAdmin, role: isSam ? "Owner" : (isAdmin ? "Admin" : "Member")
-                })
-            });
-            if (res.status === 403) document.getElementById('ban-screen').classList.remove('hidden');
-            sync();
-        }
-    }
+    let currentRoom = "global"; 
+    let allServers = [];
 
     async function sync() {
         const res = await fetch('/api/chat');
         const data = await res.json();
-        
-        if (data.banned.includes(myName.toLowerCase())) {
-            document.getElementById('ban-screen').classList.remove('hidden');
-            return;
-        }
+        allServers = data.servers || [];
+        renderUI(data.messages);
+    }
 
-        const filtered = data.messages.filter(m => m.room === currentRoom);
-        document.getElementById('flow').innerHTML = filtered.map(m => `
+    async function createServer() {
+        const name = prompt("Server Name:");
+        if (!name) return;
+        const id = name.toLowerCase().replace(/\s/g, '-');
+        await fetch('/api/chat', {
+            method: 'POST',
+            body: JSON.stringify({ action: "CREATE_SERVER", serverId: id, serverName: name, isAdmin: isSam, user: myName })
+        });
+        sync();
+    }
+
+    async function boostServer() {
+        if (!isSam) return alert("You need Nitro to boost!");
+        await fetch('/api/chat', {
+            method: 'POST',
+            body: JSON.stringify({ action: "BOOST_SERVER", serverId: currentRoom, nitro: true, user: myName })
+        });
+        sync();
+    }
+
+    function renderUI(msgs) {
+        // Render Servers
+        const bar = document.getElementById('server-bar');
+        bar.innerHTML = allServers.map(s => `
+            <div class="server-btn ${s.id === currentRoom ? 'active' : ''} ${s.boosted ? 'boosted' : ''}" 
+                 onclick="currentRoom='${s.id}'; sync();" title="${s.name}">
+                ${s.name[0].toUpperCase()}
+            </div>
+        `).join('') + (isSam ? `<div class="server-btn" onclick="createServer()" style="color:#23a55a">+</div>` : '');
+
+        // Render Messages
+        const flow = document.getElementById('flow');
+        const filtered = msgs.filter(m => m.room === currentRoom);
+        flow.innerHTML = filtered.map(m => `
             <div class="msg">
-                <div class="avatar ${m.nitro ? 'nitro-glow' : ''}">${m.user[0].toUpperCase()}</div>
+                <div class="avatar ${m.nitro ? 'nitro-glow' : ''}">${m.user[0]}</div>
                 <div>
-                    <div>
-                        <span style="font-weight:bold; ${m.nitro ? 'color:var(--nitro-pink)' : ''}">${m.user}</span>
-                        ${m.nitro ? '<span class="badge bg-nitro">NITRO</span>' : ''}
-                        ${m.role === 'Admin' || m.role === 'Owner' ? '<span class="badge bg-admin">ADMIN</span>' : ''}
-                    </div>
-                    <div style="color:var(--text-main); margin-top:2px;">${m.text}</div>
+                    <span style="font-weight:bold; ${m.nitro ? 'color:var(--nitro-pink)' : ''}">${m.user}</span>
+                    ${m.nitro ? '<span class="badge bg-nitro">NITRO</span>' : ''}
+                    <div style="color:var(--text-main);">${m.text}</div>
                 </div>
             </div>
         `).join('');
-        const flow = document.getElementById('flow');
-        flow.scrollTop = flow.scrollHeight;
     }
 
-    function renderSidebar() {
-        document.getElementById('chan-list').innerHTML = chans.map(c => `
-            <div class="link ${currentRoom === c ? 'active' : ''}" onclick="currentRoom='${c}'; renderSidebar(); sync();"># ${c}</div>
-        `).join('');
-        document.getElementById('ui-name').innerText = myName;
-        document.getElementById('ui-role').innerText = isSam ? "Owner" : (isAdmin ? "Admin" : "Member");
-        document.getElementById('room-title').innerText = "# " + currentRoom;
+    function copyInv() {
+        navigator.clipboard.writeText(window.location.href);
+        alert("Link copied! Tell them to join the " + currentRoom + " room!");
+    }
 
-        if (isAdmin) {
-            document.getElementById('admin-add-server').classList.remove('hidden');
-            document.getElementById('admin-add-chan').classList.remove('hidden');
+    async function handle(e) {
+        if (e.key === 'Enter' && e.target.value.trim()) {
+            await fetch('/api/chat', {
+                method: 'POST',
+                body: JSON.stringify({ user: myName, text: e.target.value, room: currentRoom, nitro: isSam })
+            });
+            e.target.value = "";
+            sync();
         }
     }
 
-    renderSidebar();
+    document.getElementById('ui-name').innerText = myName;
     setInterval(sync, 3000);
+    sync();
 </script>
 </body>
 </html>
